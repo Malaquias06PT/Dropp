@@ -27,7 +27,7 @@ COLORS = {  # id -> product name suffix
 
 
 def read_config():
-    text = CONFIG.read_text()
+    text = CONFIG.read_text(encoding="utf-8")
     site_url = re.search(r'siteUrl:\s*"([^"]+)"', text).group(1)
     countries = re.findall(r'"([A-Z]{2})"', re.search(r"shipsTo:\s*\[([^\]]*)\]", text).group(1))
     offers = []
@@ -46,7 +46,7 @@ def stripe(method, path, params=None, idem=None):
         cmd += ["-H", f"Idempotency-Key: {idem}"]
     for k, v in (params or []):
         cmd += ["--data-urlencode", f"{k}={v}"]
-    out = json.loads(subprocess.run(cmd, capture_output=True, text=True, check=True).stdout)
+    out = json.loads(subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", check=True).stdout)
     if "error" in out:
         sys.exit(f"Stripe error on {method} {path}: {out['error'].get('message')}")
     return out
@@ -109,10 +109,10 @@ def main():
         block = ", ".join(f'{c}: "{links[offer["id"]][c]}"' for c in COLORS)
         pattern = re.compile(r'(id:\s*"' + offer["id"] + r'",[\s\S]*?stripeLinks:\s*)\{[^}]*\}')
         text = pattern.sub(lambda m: m.group(1) + "{ " + block + " }", text, count=1)
-    CONFIG.write_text(text)
+    CONFIG.write_text(text, encoding="utf-8")
 
     # write price ids into wrangler.toml, keeping any CJ vids already filled in
-    wr = WRANGLER.read_text()
+    wr = WRANGLER.read_text(encoding="utf-8")
     old = json.loads(re.search(r"PRICE_MAP = '''([\s\S]*?)'''", wr).group(1))
     old_by_key = {v.get("key"): v for v in old.values() if isinstance(v, dict)}
     for pid, entry in price_map.items():
@@ -121,7 +121,7 @@ def main():
             entry["vid"] = prev["vid"]
     body = json.dumps(price_map, indent=2)
     wr = re.sub(r"PRICE_MAP = '''[\s\S]*?'''", "PRICE_MAP = '''\n" + body + "\n'''", wr)
-    WRANGLER.write_text(wr)
+    WRANGLER.write_text(wr, encoding="utf-8")
     print("Updated site/config.js and worker/wrangler.toml")
 
 
