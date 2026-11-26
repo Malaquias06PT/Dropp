@@ -1,0 +1,17 @@
+name = "dropp-order-sync"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+CJ_API_BASE = "https://developers.cjdropshipping.com/api2.0/v1"
+# Shipping method name exactly as CJ shows it for your product to EU countries (e.g. from the CJ freight calculator).
+CJ_LOGISTIC_NAME = "TODO"
+# Warehouse country to ship from (e.g. "DE" or "ES" for CJ's EU warehouses).
+CJ_FROM_COUNTRY = "DE"
+# Stripe price id -> CJ variant id (vid). units = items per purchased unit (2 for the 2-pack).
+PRICE_MAP = '''
+{
+  "price_TODO_single_grey": { "vid": "TODO", "units": 1 },
+  "price_TODO_duo_grey":    { "vid": "TODO", "units": 2 }
+}
+'''

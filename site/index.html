@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CloudHood — the wearable blanket · Dropp</title>
+  <meta name="description" content="CloudHood: a giant sherpa-lined blanket with sleeves and a hood. Free shipping across the EU from a European warehouse, 14-day returns.">
+  <meta property="og:type" content="product">
+  <meta property="og:title" content="CloudHood — the wearable blanket">
+  <meta property="og:description" content="Heat yourself, not the whole house. Free EU shipping, 14-day returns.">
+  <meta property="og:image" content="https://malaquias06pt.github.io/Dropp/images/og.png">
+  <meta name="theme-color" content="#b4532a">
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="logo" href="./" data-brand>Dropp</a>
+      <nav class="nav" aria-label="Main">
+        <a href="#how" data-i18n="navHow">How it works</a>
+        <a href="#faq" data-i18n="navFaq">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <label class="sr-only" for="lang">Language</label>
+        <select id="lang" class="lang"></select>
+        <a class="btn btn-small" href="#buy" data-i18n="navBuy">Buy now</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="heroEyebrow">The wearable blanket</p>
+          <h1 data-i18n="heroTitle">Heat yourself, not the whole house.</h1>
+          <p class="lead" data-i18n="heroText"></p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="#buy" data-i18n="heroCta">Choose your colour</a>
+            <span class="hero-price" data-from-price></span>
+          </div>
+          <ul class="trust">
+            <li data-i18n="trustShipping"></li>
+            <li data-i18n="trustReturns"></li>
+            <li data-i18n="trustSecure"></li>
+          </ul>
+        </div>
+        <div class="hero-visual" id="hero-visual" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <h2 class="section-title" data-i18n="benefitsTitle"></h2>
+        <div class="grid-4">
+          <article class="card"><span class="icon" aria-hidden="true">🔥</span><h3 data-i18n="b1Title"></h3><p data-i18n="b1Text"></p></article>
+          <article class="card"><span class="icon" aria-hidden="true">🛋️</span><h3 data-i18n="b2Title"></h3><p data-i18n="b2Text"></p></article>
+          <article class="card"><span class="icon" aria-hidden="true">👐</span><h3 data-i18n="b3Title"></h3><p data-i18n="b3Text"></p></article>
+          <article class="card"><span class="icon" aria-hidden="true">🫧</span><h3 data-i18n="b4Title"></h3><p data-i18n="b4Text"></p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="buy">
+      <div class="wrap">
+        <div class="buy-box" id="buy-box"></div>
+      </div>
+    </section>
+
+    <section class="section" id="how">
+      <div class="wrap">
+        <h2 class="section-title" data-i18n="howTitle"></h2>
+        <ol class="steps">
+          <li><h3 data-i18n="how1Title"></h3><p data-i18n="how1Text"></p></li>
+          <li><h3 data-i18n="how2Title"></h3><p data-i18n="how2Text"></p></li>
+          <li><h3 data-i18n="how3Title"></h3><p data-i18n="how3Text"></p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section section-alt">
+      <div class="wrap narrow">
+        <h2 class="section-title" data-i18n="specsTitle"></h2>
+        <dl class="specs">
+          <div><dt data-i18n="specMaterial"></dt><dd data-i18n="specMaterialValue"></dd></div>
+          <div><dt data-i18n="specSize"></dt><dd data-i18n="specSizeValue"></dd></div>
+          <div><dt data-i18n="specWeight"></dt><dd data-i18n="specWeightValue"></dd></div>
+          <div><dt data-i18n="specCare"></dt><dd data-i18n="specCareValue"></dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="wrap narrow">
+        <h2 class="section-title" data-i18n="faqTitle"></h2>
+        <div class="faq">
+          <details><summary data-i18n="q1"></summary><p data-i18n="a1"></p></details>
+          <details><summary data-i18n="q2"></summary><p data-i18n="a2"></p></details>
+          <details><summary data-i18n="q3"></summary><p data-i18n="a3"></p></details>
+          <details><summary data-i18n="q4"></summary><p data-i18n="a4"></p></details>
+          <details><summary data-i18n="q5"></summary><p data-i18n="a5"></p></details>
+          <details><summary data-i18n="q6"></summary><p data-i18n="a6"></p></details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <div>
+        <p class="logo" data-brand>Dropp</p>
+        <p><span data-i18n="footerContact"></span>: <a data-mail href="#"></a></p>
+        <p class="muted">© <span data-year></span> <span data-brand></span>. <span data-i18n="footerRights"></span></p>
+      </div>
+      <nav aria-label="Legal">
+        <p class="footer-heading" data-i18n="footerLegal"></p>
+        <ul>
+          <li><a href="legal-notice.html" data-i18n="footerNotice"></a></li>
+          <li><a href="terms.html" data-i18n="footerTerms"></a></li>
+          <li><a href="privacy.html" data-i18n="footerPrivacy"></a></li>
+          <li><a href="shipping.html" data-i18n="footerShipping"></a></li>
+          <li><a href="returns.html" data-i18n="footerReturns"></a></li>
+          <li><a data-complaints href="#" rel="noopener" data-i18n="footerComplaints"></a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="assets/i18n.js"></script>
+  <script src="assets/legal-content.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
