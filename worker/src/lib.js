@@ -1,4 +1,6 @@
 // Pure helpers for the order-sync worker. Kept free of network calls so they can be unit-tested.
+// CJ field names and limits follow https://developers.cjdropshipping.com/en/api/api2/api/shopping.html
+// (createOrderV2), checked on 2026-11-27.
 
 const encoder = new TextEncoder();
 
@@ -35,43 +37,52 @@ export async function verifyStripeSignature(payload, header, secret, { tolerance
   return signatures.some((sig) => timingSafeEqual(sig, expected));
 }
 
+const cut = (value, max) => String(value || "").slice(0, max);
+
+function countryName(code) {
+  try {
+    return new Intl.DisplayNames(["en"], { type: "region" }).of(code) || code;
+  } catch {
+    return code;
+  }
+}
+
 /**
- * Turns a Stripe Checkout Session (with expanded line_items) into a CJ order request body.
- * `priceMap` maps a Stripe price id to { vid, units } — the CJ variant id and how many
- * physical items one unit of that price represents (e.g. the 2-pack price → units: 2).
+ * Turns a Stripe Checkout Session (from the webhook event, no extra API call needed) into a CJ
+ * createOrderV2 request body.
+ * `linkMap` maps a Stripe Payment Link id (plink_...) to { vid, units }: the CJ variant id and how
+ * many items that link sells (2 for the 2-pack). Each Payment Link sells exactly one line at quantity 1.
  */
-export function buildCjOrder(session, priceMap, { logisticName, fromCountryCode = "" } = {}) {
+export function buildCjOrder(session, linkMap, { logisticName, fromCountryCode }) {
   const shipping = session.collected_information?.shipping_details || session.shipping_details || null;
   const customer = session.customer_details || {};
-  const address = shipping?.address || customer.address;
-  if (!address) throw new Error("Session has no shipping address. Enable address collection on the Payment Link.");
+  const address = shipping?.address;
+  if (!address?.country) throw new Error("Session has no shipping address. Enable shipping address collection on the Payment Link.");
 
-  const products = [];
-  const unknown = [];
-  for (const item of session.line_items?.data || []) {
-    const priceId = item.price?.id;
-    const mapped = priceMap[priceId];
-    if (!mapped) { unknown.push(priceId); continue; }
-    products.push({ vid: mapped.vid, quantity: item.quantity * (mapped.units || 1) });
+  const mapped = linkMap[session.payment_link];
+  if (!mapped?.vid || mapped.vid === "TODO") {
+    throw new Error(`No CJ variant mapped for Payment Link ${session.payment_link || "(none)"}`);
   }
-  if (unknown.length) throw new Error(`No CJ variant mapped for Stripe price(s): ${unknown.join(", ")}`);
-  if (!products.length) throw new Error("Session has no line items.");
+  if (!logisticName || logisticName === "TODO") throw new Error("CJ_LOGISTIC_NAME is not configured.");
+  if (!fromCountryCode) throw new Error("CJ_FROM_COUNTRY is not configured.");
 
-  const order = {
-    orderNumber: session.id,
+  return {
+    // CJ allows max 50 chars; the PaymentIntent id (pi_...) is short, unique and searchable in Stripe.
+    orderNumber: cut(session.payment_intent || session.id, 50),
     shippingCountryCode: address.country,
-    shippingProvince: address.state || address.city || "",
-    shippingCity: address.city || "",
-    shippingAddress: address.line1 || "",
-    shippingAddress2: address.line2 || "",
-    shippingZip: address.postal_code || "",
-    shippingCustomerName: shipping?.name || customer.name || "",
-    shippingPhone: customer.phone || "",
-    email: customer.email || "",
-    remark: session.client_reference_id ? `site:${session.client_reference_id}` : "",
+    shippingCountry: cut(countryName(address.country), 50),
+    shippingProvince: cut(address.state || address.city, 50),
+    shippingCity: cut(address.city, 50),
+    shippingAddress: cut(address.line1, 500),
+    shippingAddress2: cut(address.line2, 500),
+    shippingZip: cut(address.postal_code, 20),
+    shippingCustomerName: cut(shipping.name || customer.name, 50),
+    shippingPhone: cut(customer.phone, 20),
+    email: cut(customer.email, 50),
+    remark: cut(`stripe:${session.id}${session.client_reference_id ? " site:" + session.client_reference_id : ""}`, 500),
     logisticName,
-    products,
+    fromCountryCode,
+    payType: 3, // 3 = create order only; you review and pay it in the CJ dashboard
+    products: [{ vid: mapped.vid, quantity: mapped.units || 1 }],
   };
-  if (fromCountryCode) order.fromCountryCode = fromCountryCode;
-  return order;
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Create (or reuse) the Stripe products, prices and Payment Links for the shop,
-then write the links into site/config.js and the price ids into worker/wrangler.toml.
+then write the links into site/config.js and the link ids into worker/wrangler.toml.
 
 Safe to run more than once: existing objects are found by metadata and reused.
 Needs network access to api.stripe.com with an API key. The key is sent either from
@@ -64,7 +64,7 @@ def main():
     print(f"Stripe account {account['id']} ({account.get('country')}), {mode} mode")
 
     links = {o["id"]: {} for o in offers}
-    price_map = {}
+    link_map = {}
     for color, label in COLORS.items():
         product = find("products", f"metadata['dropp_color']:'{color}' AND active:'true'")
         if not product:
@@ -85,7 +85,6 @@ def main():
                     ("nickname", f"{offer['quantity']}x"),
                     ("metadata[dropp_key]", f"{offer['id']}-{color}"),
                 ], idem=f"dropp-price-{offer['id']}-{color}-{offer['cents']}-{mode}")
-            price_map[price["id"]] = {"vid": "TODO", "units": offer["quantity"], "key": f"{offer['id']}-{color}"}
 
             existing = stripe("GET", "payment_links", [("active", "true"), ("limit", "100")])["data"]
             link = next((l for l in existing if l.get("metadata", {}).get("dropp_price") == price["id"]), None)
@@ -102,6 +101,7 @@ def main():
                 params += [(f"shipping_address_collection[allowed_countries][{i}]", c) for i, c in enumerate(countries)]
                 link = stripe("POST", "payment_links", params, idem=f"dropp-link-{price['id']}")
             links[offer["id"]][color] = link["url"]
+            link_map[link["id"]] = {"vid": "TODO", "units": offer["quantity"], "key": f"{offer['id']}-{color}"}
             print(f"    {offer['id']:6} {offer['cents']/100:.2f} EUR  {price['id']}  {link['url']}")
 
     # write links into config.js
@@ -111,16 +111,16 @@ def main():
         text = pattern.sub(lambda m: m.group(1) + "{ " + block + " }", text, count=1)
     CONFIG.write_text(text, encoding="utf-8")
 
-    # write price ids into wrangler.toml, keeping any CJ vids already filled in
+    # write Payment Link ids into wrangler.toml, keeping any CJ vids already filled in
     wr = WRANGLER.read_text(encoding="utf-8")
-    old = json.loads(re.search(r"PRICE_MAP = '''([\s\S]*?)'''", wr).group(1))
+    old = json.loads(re.search(r"LINK_MAP = '''([\s\S]*?)'''", wr).group(1))
     old_by_key = {v.get("key"): v for v in old.values() if isinstance(v, dict)}
-    for pid, entry in price_map.items():
-        prev = old.get(pid) or old_by_key.get(entry["key"])
+    for lid, entry in link_map.items():
+        prev = old.get(lid) or old_by_key.get(entry["key"])
         if prev and prev.get("vid") not in (None, "TODO"):
             entry["vid"] = prev["vid"]
-    body = json.dumps(price_map, indent=2)
-    wr = re.sub(r"PRICE_MAP = '''[\s\S]*?'''", "PRICE_MAP = '''\n" + body + "\n'''", wr)
+    body = json.dumps(link_map, indent=2)
+    wr = re.sub(r"LINK_MAP = '''[\s\S]*?'''", lambda m: "LINK_MAP = '''\n" + body + "\n'''", wr)
     WRANGLER.write_text(wr, encoding="utf-8")
     print("Updated site/config.js and worker/wrangler.toml")
 
