@@ -58,6 +58,8 @@ Cada alteração enviada para o `main` volta a publicar o site sozinha.
    - "CloudHood – Cinza pedra" com dois preços: **39,90 €** e **69,90 €** (pack de 2)
    - "CloudHood – Creme aveia", igual
    - "CloudHood – Azul meia-noite", igual
+> **Atalho:** em vez dos passos 3–5, corre `python scripts/stripe-setup.py` com a variável `STRIPE_API_KEY` definida no teu terminal. O script cria os produtos, os preços e os 6 links já configurados, e escreve-os no `site/config.js` e no `worker/wrangler.toml`. Podes corrê-lo mais de uma vez sem duplicar nada.
+
 4. **Payment Links → New**, um por cada preço (6 no total). Em cada um:
    - **Collect customers' addresses → Shipping addresses**, com os países da lista `shipsTo` do `config.js`
    - **Require customers to provide a phone number** (a transportadora precisa)
@@ -78,28 +80,28 @@ Quando o link está preenchido, o botão "Continuar para o pagamento seguro" fic
 3. Paga a encomenda na CJ. Quando houver código de seguimento, envia-o ao cliente.
 
 ### Opção B — automática (Cloudflare Worker grátis, pasta `worker/`)
-O Worker recebe o aviso da Stripe e **cria a encomenda na CJ sozinho**, com morada, telefone e variante. A encomenda fica **por pagar** na CJ, para a reveres antes de pagar.
-
-> ⚠️ Não consegui abrir a documentação da API da CJ a partir do ambiente onde o código foi escrito (o site estava bloqueado). Antes de ligar, confirma em <https://developers.cjdropshipping.com> os endpoints `authentication/getAccessToken` e `shopping/order/createOrderV2` e os nomes dos campos. Estão todos em `worker/src/index.js` e `worker/src/lib.js`.
+O Worker recebe o aviso da Stripe e **cria a encomenda na CJ sozinho**, com morada, telefone e variante. A encomenda fica **por pagar** na CJ (`payType: 3`), para a reveres antes de pagar.
+Os campos seguem a documentação oficial da CJ (`createOrderV2`), verificada a 27/11/2026. A automação não precisa da chave secreta da Stripe.
 
 1. Na CJ: **My CJ → Authorization → API** → gera a **API Key**.
-2. Na Stripe: **Developers → API keys** → cria uma *restricted key* com leitura de Checkout Sessions.
-3. Cria conta grátis na [Cloudflare](https://dash.cloudflare.com/sign-up) e, no teu computador:
+2. Em `worker/wrangler.toml`:
+   - `LINK_MAP`: preenchido sozinho pelo `scripts/stripe-setup.py`. Só tens de trocar cada `"TODO"` pelo VID da CJ da cor certa (a chave `key` diz qual é, ex. `duo-grey`).
+   - `CJ_LOGISTIC_NAME` e `CJ_FROM_COUNTRY`: os valores que anotaste no passo 2.
+3. Cria conta grátis na [Cloudflare](https://dash.cloudflare.com/sign-up) e publica:
    ```bash
    cd worker
    npx wrangler login
-   npx wrangler secret put STRIPE_SECRET_KEY      # a chave restrita da Stripe
-   npx wrangler secret put CJ_API_KEY             # a API key da CJ
+   npx wrangler deploy
    ```
-4. Edita `worker/wrangler.toml`:
-   - `PRICE_MAP`: para cada preço da Stripe (`price_...`, em Product catalog → preço), indica o VID da CJ e quantas unidades representa (`units: 2` no pack de 2)
-   - `CJ_LOGISTIC_NAME` e `CJ_FROM_COUNTRY`: os valores que anotaste no passo 2
-5. `npx wrangler deploy`. Fica com um URL do tipo `https://dropp-order-sync.<conta>.workers.dev`.
-6. Na Stripe: **Developers → Webhooks → Add endpoint**:
+   Fica com um URL do tipo `https://dropp-order-sync.<conta>.workers.dev`.
+4. Na Stripe: **Developers → Webhooks → Add endpoint**:
    - URL: `https://dropp-order-sync.<conta>.workers.dev/stripe-webhook`
    - Eventos: `checkout.session.completed` e `checkout.session.async_payment_succeeded`
-   - Copia o *Signing secret* e corre `npx wrangler secret put STRIPE_WEBHOOK_SECRET`
-7. Faz uma compra de teste e vê os registos com `npx wrangler tail`.
+   - Copia o *Signing secret* (`whsec_...`).
+5. Na Cloudflare: **Workers & Pages → dropp-order-sync → Settings → Variables and Secrets → Add**, do tipo **Secret**:
+   - `STRIPE_WEBHOOK_SECRET` = o `whsec_...`
+   - `CJ_API_KEY` = a API Key da CJ
+6. Faz uma compra de teste e vê os registos com `npx wrangler tail` ou no painel da Cloudflare (**Logs**).
 
 Os pagamentos por Multibanco só criam a encomenda na CJ quando o cliente paga de facto.
 

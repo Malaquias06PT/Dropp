@@ -8,10 +8,8 @@ CJ_API_BASE = "https://developers.cjdropshipping.com/api2.0/v1"
 CJ_LOGISTIC_NAME = "TODO"
 # Warehouse country to ship from (e.g. "DE" or "ES" for CJ's EU warehouses).
 CJ_FROM_COUNTRY = "DE"
-# Stripe price id -> CJ variant id (vid). units = items per purchased unit (2 for the 2-pack).
-PRICE_MAP = '''
-{
-  "price_TODO_single_grey": { "vid": "TODO", "units": 1 },
-  "price_TODO_duo_grey":    { "vid": "TODO", "units": 2 }
-}
+# Stripe Payment Link id -> CJ variant id (vid). units = items that link sells (2 for the 2-pack).
+# Filled in automatically by scripts/stripe-setup.py; you only replace each "TODO" vid.
+LINK_MAP = '''
+{}
 '''
